@@ -8,6 +8,9 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ForbiddenException } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { Param, ParseIntPipe } from '@nestjs/common';
+import { ApiParam } from '@nestjs/swagger';
+
 
 @ApiBearerAuth('access-token')
 @ApiTags('Usuarios')
@@ -70,5 +73,12 @@ export class UsuariosController {
     @ApiBody({ type: CambiarContrasenaDto })
     async cambiarContrasena(@Body() dto: CambiarContrasenaDto) {
         return this.usuariosService.cambiarContrasena(dto);
+    }
+
+    @Get('jerarquia/:id')
+    @ApiOperation({ summary: 'Obtener jerarquía de jefes de un usuario (CTE recursivo)' })
+    @ApiParam({ name: 'id', type: Number, description: 'ID del usuario' })
+    async obtenerJerarquia(@Param('id', ParseIntPipe) id: number) {
+        return this.usuariosService.obtenerJerarquia(id);
     }
 }

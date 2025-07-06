@@ -166,4 +166,28 @@ export class UsuariosService {
 
         return { mensaje: 'Contraseña cambiada con éxito.' };
     }
+
+    async obtenerJerarquia(usuId: number) {
+        // Valida que exista el usuario
+        const existe = await this.dataSource.query('SELECT * FROM tbl_usuarios WHERE usu_id = $1', [usuId]);
+        if (!existe[0]) throw new NotFoundException('Usuario no encontrado');
+
+        const sql = `
+            WITH RECURSIVE jerarquia AS (
+                SELECT 
+                u.usu_id, u.usu_usuario, u.usu_cargo, u.usu_jefe_id, 1 as nivel
+                FROM tbl_usuarios u
+                WHERE u.usu_id = $1
+                UNION ALL
+                SELECT 
+                jefe.usu_id, jefe.usu_usuario, jefe.usu_cargo, jefe.usu_jefe_id, j.nivel + 1
+                FROM tbl_usuarios jefe
+                INNER JOIN jerarquia j ON jefe.usu_id = j.usu_jefe_id
+            )
+            SELECT usu_id, usu_usuario, usu_cargo, nivel
+            FROM jerarquia
+            ORDER BY nivel;
+            `;
+        return this.dataSource.query(sql, [usuId]);
+    }
 }
